@@ -6,6 +6,8 @@ var open = require("gulp-open"); //Open a URL in a web browser
 var browserify = require("browserify"); //Bundles the JS
 var reactify = require("reactify"); //JSX compliler
 var source = require("vinyl-source-stream"); //uses conventional source stream with Gulp
+var concat = require("gulp-concat"); //concatenates files
+
 
 var  config = {
   port:9500,
@@ -13,6 +15,10 @@ var  config = {
   paths: {
     html: "./src/*.html", //go int the source directory and find anything that ends in .html
     js: "./src/**/*/js",
+    css: [
+      "node_modules/bootstrap/dist/css/bootstrap.min.css",
+      "node_modules/bootstrap/dist/css/bootstrap-theme.min.css"
+    ],
     dist: "./dist",
     mainJs: "./src/main.js"
   }
@@ -49,9 +55,15 @@ gulp.task("js",function(){
     .pipe(connect.reload());
 });
 
+gulp.task("css",function(){
+  gulp.src(config.paths.css)
+    .pipe(concat("bundle.css"))
+    .pipe(gulp.dest(config.paths.dist+"/css"));
+});
+
 gulp.task("watch",function(){
   gulp.watch(config.paths.html,["html"]); //if anything changes in paths it will reload the browser.
   gulp.watch(config.paths.js,["js"]);
 });
 
-gulp.task("default",["html","js","open","watch"]); //if you type gulp in command line it will run html and open
+gulp.task("default",["html","js","css","open","watch"]); //if you type gulp in command line it will run html and open
