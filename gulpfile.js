@@ -24,7 +24,7 @@ gulp.task("connect",function(){
 });
 
 gulp.task("open",["connect"],function(){ //runs connect first
-  gulp.src("/dist/index.html")
+  gulp.src("dist/index.html")
     .pipe(open({uri: config.devBaseUrl + ":" + config.port +"/"}));
 });
 
@@ -34,4 +34,8 @@ gulp.task("html",function(){
     .pipe(connect.reload()); //using npm installed dependencies
 });
 
-gulp.task("default",["html","open"]); //if you type gulp in command line it will run html and open
+gulp.task("watch",function(){
+  gulp.watch(config.paths.html,["html"]); //if anything changes in paths it will reload the browser.
+});
+
+gulp.task("default",["html","open","watch"]); //if you type gulp in command line it will run html and open
