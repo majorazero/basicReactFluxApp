@@ -9,7 +9,7 @@ var  config = {
   devBaseUrl: "http://localhost",
   paths: {
     html: "./src/*.html", //go int the source directory and find anything that ends in .html
-    dist: "/dist"
+    dist: "./dist"
   }
 }
 
