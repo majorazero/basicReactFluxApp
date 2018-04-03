@@ -13,7 +13,7 @@ var  config = {
   devBaseUrl: "http://localhost",
   paths: {
     html: "./src/*.html", //go int the source directory and find anything that ends in .html
-    js: "./src/**/*/js",
+    js: "./src/**/*.js",
     images: "./src/images/*",
     css: [
       "node_modules/bootstrap/dist/css/bootstrap.min.css",
@@ -22,7 +22,7 @@ var  config = {
     dist: "./dist",
     mainJs: "./src/main.js"
   }
-}
+};
 //Start a local development server
 gulp.task("connect",function(){
   connect.server({
