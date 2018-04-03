@@ -49717,9 +49717,9 @@ var Input = require("../common/textInput");
 var AuthorForm = React.createClass({displayName: "AuthorForm",
   propTypes: {
     author: React.PropTypes.object.isRequired,
-    onSave:  React.PropTypes.func.isRequired,
-    onChange:  React.PropTypes.func.isRequired,
-    errors:  React.PropTypes.object
+    onSave: React.PropTypes.func.isRequired,
+    onChange: React.PropTypes.func.isRequired,
+    errors: React.PropTypes.object
   },
   render: function(){
     return (
@@ -49761,10 +49761,18 @@ var ManageAuthorPage = React.createClass({displayName: "ManageAuthorPage",
   mixins: [
     Router.Navigation
   ],
+  statics: {
+    willTransitionFrom: function(transition, component){
+      if (component.state.dirty && !confirm("Leaving before saving?")){ //forms with info in it still
+        transition.abort();
+      }
+    }
+  },
   getInitialState: function(){
     return {
       author: {id: "", firstName: "", lastName: ""},
-      errors: {}
+      errors: {},
+      dirty: false
     };
   },
   render: function(){
@@ -49777,6 +49785,7 @@ var ManageAuthorPage = React.createClass({displayName: "ManageAuthorPage",
     );
   },
   _setAuthorState: function(event) {
+    this.setState({dirty: true});
     var field = event.target.name;
     var value = event.target.value;
     this.state.author[field] = value;
@@ -49803,6 +49812,7 @@ var ManageAuthorPage = React.createClass({displayName: "ManageAuthorPage",
     }
     AuthorApi.saveAuthor(this.state.author);
     toastr.success("Author saved!");
+    this.setState({dirty: false});
     this.transitionTo("authors"); //requires the mixin
   }
 });
