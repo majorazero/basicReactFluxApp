@@ -49172,6 +49172,382 @@ module.exports = warning;
 module.exports = require('./lib/React');
 
 },{"./lib/React":70}],198:[function(require,module,exports){
+/*
+ * Toastr
+ * Copyright 2012-2014 
+ * Authors: John Papa, Hans Fjällemark, and Tim Ferrell.
+ * All Rights Reserved.
+ * Use, reproduction, distribution, and modification of this code is subject to the terms and
+ * conditions of the MIT license, available at http://www.opensource.org/licenses/mit-license.php
+ *
+ * ARIA Support: Greta Krafsig
+ *
+ * Project: https://github.com/CodeSeven/toastr
+ */
+; (function (define) {
+    define(['jquery'], function ($) {
+        return (function () {
+            var $container;
+            var listener;
+            var toastId = 0;
+            var toastType = {
+                error: 'error',
+                info: 'info',
+                success: 'success',
+                warning: 'warning'
+            };
+
+            var toastr = {
+                clear: clear,
+                remove: remove,
+                error: error,
+                getContainer: getContainer,
+                info: info,
+                options: {},
+                subscribe: subscribe,
+                success: success,
+                version: '2.1.0',
+                warning: warning
+            };
+
+            var previousToast;
+
+            return toastr;
+
+            //#region Accessible Methods
+            function error(message, title, optionsOverride) {
+                return notify({
+                    type: toastType.error,
+                    iconClass: getOptions().iconClasses.error,
+                    message: message,
+                    optionsOverride: optionsOverride,
+                    title: title
+                });
+            }
+
+            function getContainer(options, create) {
+                if (!options) { options = getOptions(); }
+                $container = $('#' + options.containerId);
+                if ($container.length) {
+                    return $container;
+                }
+                if (create) {
+                    $container = createContainer(options);
+                }
+                return $container;
+            }
+
+            function info(message, title, optionsOverride) {
+                return notify({
+                    type: toastType.info,
+                    iconClass: getOptions().iconClasses.info,
+                    message: message,
+                    optionsOverride: optionsOverride,
+                    title: title
+                });
+            }
+
+            function subscribe(callback) {
+                listener = callback;
+            }
+
+            function success(message, title, optionsOverride) {
+                return notify({
+                    type: toastType.success,
+                    iconClass: getOptions().iconClasses.success,
+                    message: message,
+                    optionsOverride: optionsOverride,
+                    title: title
+                });
+            }
+
+            function warning(message, title, optionsOverride) {
+                return notify({
+                    type: toastType.warning,
+                    iconClass: getOptions().iconClasses.warning,
+                    message: message,
+                    optionsOverride: optionsOverride,
+                    title: title
+                });
+            }
+
+            function clear($toastElement) {
+                var options = getOptions();
+                if (!$container) { getContainer(options); }
+                if (!clearToast($toastElement, options)) {
+                    clearContainer(options);
+                }
+            }
+
+            function remove($toastElement) {
+                var options = getOptions();
+                if (!$container) { getContainer(options); }
+                if ($toastElement && $(':focus', $toastElement).length === 0) {
+                    removeToast($toastElement);
+                    return;
+                }
+                if ($container.children().length) {
+                    $container.remove();
+                }
+            }
+            //#endregion
+
+            //#region Internal Methods
+
+            function clearContainer (options) {
+                var toastsToClear = $container.children();
+                for (var i = toastsToClear.length - 1; i >= 0; i--) {
+                    clearToast($(toastsToClear[i]), options);
+                }
+            }
+
+            function clearToast ($toastElement, options) {
+                if ($toastElement && $(':focus', $toastElement).length === 0) {
+                    $toastElement[options.hideMethod]({
+                        duration: options.hideDuration,
+                        easing: options.hideEasing,
+                        complete: function () { removeToast($toastElement); }
+                    });
+                    return true;
+                }
+                return false;
+            }
+
+            function createContainer(options) {
+                $container = $('<div/>')
+                    .attr('id', options.containerId)
+                    .addClass(options.positionClass)
+                    .attr('aria-live', 'polite')
+                    .attr('role', 'alert');
+
+                $container.appendTo($(options.target));
+                return $container;
+            }
+
+            function getDefaults() {
+                return {
+                    tapToDismiss: true,
+                    toastClass: 'toast',
+                    containerId: 'toast-container',
+                    debug: false,
+
+                    showMethod: 'fadeIn', //fadeIn, slideDown, and show are built into jQuery
+                    showDuration: 300,
+                    showEasing: 'swing', //swing and linear are built into jQuery
+                    onShown: undefined,
+                    hideMethod: 'fadeOut',
+                    hideDuration: 1000,
+                    hideEasing: 'swing',
+                    onHidden: undefined,
+
+                    extendedTimeOut: 1000,
+                    iconClasses: {
+                        error: 'toast-error',
+                        info: 'toast-info',
+                        success: 'toast-success',
+                        warning: 'toast-warning'
+                    },
+                    iconClass: 'toast-info',
+                    positionClass: 'toast-top-right',
+                    timeOut: 5000, // Set timeOut and extendedTimeOut to 0 to make it sticky
+                    titleClass: 'toast-title',
+                    messageClass: 'toast-message',
+                    target: 'body',
+                    closeHtml: '<button>&times;</button>',
+                    newestOnTop: true,
+                    preventDuplicates: false,
+                    progressBar: false
+                };
+            }
+
+            function publish(args) {
+                if (!listener) { return; }
+                listener(args);
+            }
+
+            function notify(map) {
+                var options = getOptions(),
+                    iconClass = map.iconClass || options.iconClass;
+
+                if (options.preventDuplicates) {
+                    if (map.message === previousToast) {
+                        return;
+                    } else {
+                        previousToast = map.message;
+                    }
+                }
+
+                if (typeof (map.optionsOverride) !== 'undefined') {
+                    options = $.extend(options, map.optionsOverride);
+                    iconClass = map.optionsOverride.iconClass || iconClass;
+                }
+
+                toastId++;
+
+                $container = getContainer(options, true);
+                var intervalId = null,
+                    $toastElement = $('<div/>'),
+                    $titleElement = $('<div/>'),
+                    $messageElement = $('<div/>'),
+                    $progressElement = $('<div/>'),
+                    $closeElement = $(options.closeHtml),
+                    progressBar = {
+                        intervalId: null,
+                        hideEta: null,
+                        maxHideTime: null
+                    },
+                    response = {
+                        toastId: toastId,
+                        state: 'visible',
+                        startTime: new Date(),
+                        options: options,
+                        map: map
+                    };
+
+                if (map.iconClass) {
+                    $toastElement.addClass(options.toastClass).addClass(iconClass);
+                }
+
+                if (map.title) {
+                    $titleElement.append(map.title).addClass(options.titleClass);
+                    $toastElement.append($titleElement);
+                }
+
+                if (map.message) {
+                    $messageElement.append(map.message).addClass(options.messageClass);
+                    $toastElement.append($messageElement);
+                }
+
+                if (options.closeButton) {
+                    $closeElement.addClass('toast-close-button').attr('role', 'button');
+                    $toastElement.prepend($closeElement);
+                }
+
+                if (options.progressBar) {
+                    $progressElement.addClass('toast-progress');
+                    $toastElement.prepend($progressElement);
+                }
+
+                $toastElement.hide();
+                if (options.newestOnTop) {
+                    $container.prepend($toastElement);
+                } else {
+                    $container.append($toastElement);
+                }
+                $toastElement[options.showMethod](
+                    {duration: options.showDuration, easing: options.showEasing, complete: options.onShown}
+                );
+
+                if (options.timeOut > 0) {
+                    intervalId = setTimeout(hideToast, options.timeOut);
+                    progressBar.maxHideTime = parseFloat(options.timeOut);
+                    progressBar.hideEta = new Date().getTime() + progressBar.maxHideTime;
+                    if (options.progressBar) {
+                        progressBar.intervalId = setInterval(updateProgress, 10);
+                    }
+                }
+
+                $toastElement.hover(stickAround, delayedHideToast);
+                if (!options.onclick && options.tapToDismiss) {
+                    $toastElement.click(hideToast);
+                }
+
+                if (options.closeButton && $closeElement) {
+                    $closeElement.click(function (event) {
+                        if (event.stopPropagation) {
+                            event.stopPropagation();
+                        } else if (event.cancelBubble !== undefined && event.cancelBubble !== true) {
+                            event.cancelBubble = true;
+                        }
+                        hideToast(true);
+                    });
+                }
+
+                if (options.onclick) {
+                    $toastElement.click(function () {
+                        options.onclick();
+                        hideToast();
+                    });
+                }
+
+                publish(response);
+
+                if (options.debug && console) {
+                    console.log(response);
+                }
+
+                return $toastElement;
+
+                function hideToast(override) {
+                    if ($(':focus', $toastElement).length && !override) {
+                        return;
+                    }
+                    clearTimeout(progressBar.intervalId);
+                    return $toastElement[options.hideMethod]({
+                        duration: options.hideDuration,
+                        easing: options.hideEasing,
+                        complete: function () {
+                            removeToast($toastElement);
+                            if (options.onHidden && response.state !== 'hidden') {
+                                options.onHidden();
+                            }
+                            response.state = 'hidden';
+                            response.endTime = new Date();
+                            publish(response);
+                        }
+                    });
+                }
+
+                function delayedHideToast() {
+                    if (options.timeOut > 0 || options.extendedTimeOut > 0) {
+                        intervalId = setTimeout(hideToast, options.extendedTimeOut);
+                        progressBar.maxHideTime = parseFloat(options.extendedTimeOut);
+                        progressBar.hideEta = new Date().getTime() + progressBar.maxHideTime;
+                    }
+                }
+
+                function stickAround() {
+                    clearTimeout(intervalId);
+                    progressBar.hideEta = 0;
+                    $toastElement.stop(true, true)[options.showMethod](
+                        {duration: options.showDuration, easing: options.showEasing}
+                    );
+                }
+
+                function updateProgress() {
+                    var percentage = ((progressBar.hideEta - (new Date().getTime())) / progressBar.maxHideTime) * 100;
+                    $progressElement.width(percentage + '%');
+                }
+            }
+
+            function getOptions() {
+                return $.extend({}, getDefaults(), toastr.options);
+            }
+
+            function removeToast($toastElement) {
+                if (!$container) { $container = getContainer(); }
+                if ($toastElement.is(':visible')) {
+                    return;
+                }
+                $toastElement.remove();
+                $toastElement = null;
+                if ($container.children().length === 0) {
+                    $container.remove();
+                }
+            }
+            //#endregion
+
+        })();
+    });
+}(typeof define === 'function' && define.amd ? define : function (deps, factory) {
+    if (typeof module !== 'undefined' && module.exports) { //Node
+        module.exports = factory(require('jquery'));
+    } else {
+        window['toastr'] = factory(window['jQuery']);
+    }
+}));
+
+},{"jquery":1}],199:[function(require,module,exports){
 "use strict";
 
 //This file is mocking a web API by hitting hard coded data.
@@ -49223,7 +49599,7 @@ var AuthorApi = {
 
 module.exports = AuthorApi;
 
-},{"./authorData":199,"lodash":2}],199:[function(require,module,exports){
+},{"./authorData":200,"lodash":2}],200:[function(require,module,exports){
 module.exports = {
 	authors:
 	[
@@ -49245,7 +49621,7 @@ module.exports = {
 	]
 };
 
-},{}],200:[function(require,module,exports){
+},{}],201:[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -49265,7 +49641,7 @@ var NotFoundPage = React.createClass({displayName: "NotFoundPage",
 
 module.exports = NotFoundPage;
 
-},{"react":197,"react-router":28}],201:[function(require,module,exports){
+},{"react":197,"react-router":28}],202:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -49309,7 +49685,7 @@ var About = React.createClass({displayName: "About",
 
 module.exports = About;
 
-},{"react":197}],202:[function(require,module,exports){
+},{"react":197}],203:[function(require,module,exports){
 /*eslint-disable strict */
 
 var React = require("react");
@@ -49332,7 +49708,7 @@ var App = React.createClass({displayName: "App",
 
 module.exports = App;
 
-},{"./common/header":207,"jquery":1,"react":197,"react-router":28}],203:[function(require,module,exports){
+},{"./common/header":208,"jquery":1,"react":197,"react-router":28}],204:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -49364,14 +49740,19 @@ var AuthorForm = React.createClass({displayName: "AuthorForm",
 
 module.exports = AuthorForm;
 
-},{"../common/textInput":208,"react":197}],204:[function(require,module,exports){
+},{"../common/textInput":209,"react":197}],205:[function(require,module,exports){
 "use strict";
 //we'll use this as the top level controller view
 var React = require("react");
+var Router = require("react-router");
 var AuthorForm = require("./AuthorForm");
 var AuthorApi = require("../../api/authorApi");
+var toastr = require("toastr");
 
 var ManageAuthorPage = React.createClass({displayName: "ManageAuthorPage",
+  mixins: [
+    Router.Navigation
+  ],
   getInitialState: function(){
     return {
       author: {id: "", firstName: "", lastName: ""}
@@ -49394,12 +49775,14 @@ var ManageAuthorPage = React.createClass({displayName: "ManageAuthorPage",
   _saveAuthor: function(event) {
     event.preventDefault();
     AuthorApi.saveAuthor(this.state.author);
+    toastr.success("Author saved!");
+    this.transitionTo("authors"); //requires the mixin
   }
 });
 
 module.exports = ManageAuthorPage;
 
-},{"../../api/authorApi":198,"./AuthorForm":203,"react":197}],205:[function(require,module,exports){
+},{"../../api/authorApi":199,"./AuthorForm":204,"react":197,"react-router":28,"toastr":198}],206:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -49433,7 +49816,7 @@ var AuthorList = React.createClass({displayName: "AuthorList",
 
 module.exports = AuthorList;
 
-},{"react":197}],206:[function(require,module,exports){
+},{"react":197}],207:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -49466,7 +49849,7 @@ var AuthorPage = React.createClass({displayName: "AuthorPage",
 
 module.exports = AuthorPage;
 
-},{"../../api/authorApi":198,"./authorList":205,"react":197,"react-router":28}],207:[function(require,module,exports){
+},{"../../api/authorApi":199,"./authorList":206,"react":197,"react-router":28}],208:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -49494,7 +49877,7 @@ var Header = React.createClass({displayName: "Header",
 
 module.exports = Header;
 
-},{"react":197,"react-router":28}],208:[function(require,module,exports){
+},{"react":197,"react-router":28}],209:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -49534,7 +49917,7 @@ var Input = React.createClass({displayName: "Input",
 
 module.exports = Input;
 
-},{"react":197}],209:[function(require,module,exports){
+},{"react":197}],210:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -49555,7 +49938,7 @@ var Home = React.createClass({displayName: "Home", //Object style of calling com
 
 module.exports = Home;
 
-},{"react":197,"react-router":28}],210:[function(require,module,exports){
+},{"react":197,"react-router":28}],211:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -49566,7 +49949,7 @@ Router.run(routes, function(Handler){
   React.render(React.createElement(Handler, null), document.getElementById("app"));
 });
 
-},{"./routes":211,"react":197,"react-router":28}],211:[function(require,module,exports){
+},{"./routes":212,"react":197,"react-router":28}],212:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -49594,4 +49977,4 @@ var routes = (
 
 module.exports = routes;
 
-},{"./components/NotFoundPage":200,"./components/about/aboutPage":201,"./components/app":202,"./components/authors/ManageAuthorPage":204,"./components/authors/authorPage":206,"./components/homePage":209,"react":197,"react-router":28}]},{},[210]);
+},{"./components/NotFoundPage":201,"./components/about/aboutPage":202,"./components/app":203,"./components/authors/ManageAuthorPage":205,"./components/authors/authorPage":207,"./components/homePage":210,"react":197,"react-router":28}]},{},[211]);
