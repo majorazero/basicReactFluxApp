@@ -15,7 +15,7 @@ var _clone = function(item) {
 
 var CourseApi = {
 	getAllCourses: function() {
-		return _clone(courses);	
+		return _clone(courses);
 	},
 
 	getCoursesById: function(id) {
@@ -27,11 +27,11 @@ var CourseApi = {
 		console.log('Imagine saving course via AJAX call...');
 
 		if (course.id) {
-			var existingCourseIndex = _.indexOf(courses, _.find(courses, {id: course.id})); 
-			courses.splice(existingCourseIndex, 1, course); 
+			var existingCourseIndex = _.indexOf(courses, _.find(courses, {id: course.id}));
+			courses.splice(existingCourseIndex, 1, course);
 		} else {
-			//just simulating creation here. This data 
-			//would be generated on the server in a real app. 
+			//just simulating creation here. This data
+			//would be generated on the server in a real app.
 			course.id = _generateId(course);
 			courses.push(_clone(course));
 		}
