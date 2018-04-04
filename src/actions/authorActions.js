@@ -6,7 +6,7 @@ var ActionTypes = require("../constants/actionTypes");
 
 var AuthorActions = {
   createAuthor: function(author) {
-    var newAuthor = AuthorApi.saveAuthor(author);
+    var newAuthor = AuthorApi.saveAuthor(author); //probably need to rewrite this a different way when calling a real database
     //Hey dispatcher, go tell all the stores that
     //an author was just created.
     Dispatcher.dispatch({
