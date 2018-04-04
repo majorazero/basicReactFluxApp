@@ -36,6 +36,12 @@ Dispatcher.register(function(action) {
         _authors.push(action.author);
         AuthorStore.emitChange(); //needed to call to notify React to update UI
         break;
+    case ActionTypes.UPDATE_AUTHOR:
+        var existingAuthor = _.find(_authors, {id: action.author.id});
+        var existingAuthorIndex = _.indexOf(_authors, existingAuthor);
+        _authors.splice(existingAuthorIndex, 1, action.author);
+        AuthorStore.emitChange(); //needed to call to notify React to update UI
+        break;
     default: //no op
   }
 });

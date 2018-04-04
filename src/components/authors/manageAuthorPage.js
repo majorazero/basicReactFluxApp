@@ -67,7 +67,11 @@ var ManageAuthorPage = React.createClass({
     if(!this._authorFormIsValid()){
       return;
     }
+    if (this.state.author.id) { //if there is an id this becomes an update
+      AuthorActions.updateAuthor(this.state.author);
+    } else {
     AuthorActions.createAuthor(this.state.author);
+    }
     toastr.success("Author saved!");
     this.setState({dirty: false});
     this.transitionTo("authors"); //requires the mixin
