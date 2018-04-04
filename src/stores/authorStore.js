@@ -28,9 +28,15 @@ var AuthorStore = assign({}, EventEmitter.prototype, {
 
 Dispatcher.register(function(action) {
   switch(action.actionType) {
+    case ActionTypes.INITIALIZE:
+        _authors = action.initialData.authors;
+        AuthorStore.emitChange();
+        break;
     case ActionTypes.CREATE_AUTHOR:
         _authors.push(action.author);
         AuthorStore.emitChange(); //needed to call to notify React to update UI
+        break;
+    default: //no op
   }
 });
 
