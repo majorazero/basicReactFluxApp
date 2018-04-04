@@ -42,6 +42,12 @@ Dispatcher.register(function(action) {
         _authors.splice(existingAuthorIndex, 1, action.author);
         AuthorStore.emitChange(); //needed to call to notify React to update UI
         break;
+    case ActionTypes.DELETE_AUTHOR:
+        _.remove(_authors, function(author) {
+          return action.id === author.id;
+        });
+        AuthorStore.emitChange();
+        break;
     default: //no op
   }
 });
