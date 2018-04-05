@@ -3,6 +3,7 @@ var React = require("react");
 var Input = require("../common/textInput");
 
 var CourseForm = React.createClass({
+
   render: function() {
     return (
       <form>
@@ -10,19 +11,28 @@ var CourseForm = React.createClass({
         <Input
           name="title"
           label="Title"
-          value={this.props.title} />
+          value={this.props.course.title}
+          onChange={this.props.onChange} />
         <Input
           name="author"
           label="Author"
-          value={this.props.author} />
+          value={this.props.course.author.name}
+          onChange={this.props.onChange} />
         <Input
           name="category"
           label="Category"
-          value={this.props.category} />
+          value={this.props.course.category}
+          onChange={this.props.onChange} />
         <Input
           name="length"
           label="Length"
-          value={this.props.length} />
+          value={this.props.course.length}
+          onChange={this.props.onChange} />
+        <Input
+          name="watchHref"
+          label="Link"
+          value={this.props.course.watchHref}
+          onChange={this.props.onChange} />
         <input type="submit" value="Save" className="btn btn-default"
           onClick={this.props.onSave}/>
       </form>

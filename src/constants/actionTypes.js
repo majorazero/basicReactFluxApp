@@ -7,5 +7,7 @@ module.exports = keyMirror({
   UPDATE_AUTHOR: null,
   DELETE_AUTHOR: null,
   INITIALIZE_COURSES: null,
+  CREATE_COURSES: null,
+  UPDATE_COURSES: null,
   DELETE_COURSES: null
 });

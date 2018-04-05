@@ -50280,7 +50280,6 @@ var AuthorActions = {
   },
   updateAuthor: function(author) {
     var updatedAuthor = AuthorApi.saveAuthor(author);
-
     Dispatcher.dispatch({
       actionType: ActionTypes.UPDATE_AUTHOR,
       author: updatedAuthor
@@ -50313,8 +50312,21 @@ var CoursesAction = {
       actionType: ActionTypes.DELETE_COURSES,
       id: id
     });
+  },
+  createCourse: function(course){
+    var newCourse = CoursesApi.saveCourse(course);
+    Dispatcher.dispatch({
+      actionType: ActionTypes.CREATE_COURSES,
+      course: newCourse
+    });
+  },
+  updateCourse: function(course){
+    var updatedCourse = CoursesApi.saveCourse(course);
+    Dispatcher.dispatch({
+      actionType: ActionTypes.UPDATE_COURSES,
+      course: updatedCourse
+    });
   }
-
 };
 
 module.exports = CoursesAction;
@@ -50887,6 +50899,7 @@ var React = require("react");
 var Input = require("../common/textInput");
 
 var CourseForm = React.createClass({displayName: "CourseForm",
+
   render: function() {
     return (
       React.createElement("form", null, 
@@ -50894,19 +50907,28 @@ var CourseForm = React.createClass({displayName: "CourseForm",
         React.createElement(Input, {
           name: "title", 
           label: "Title", 
-          value: this.props.title}), 
+          value: this.props.course.title, 
+          onChange: this.props.onChange}), 
         React.createElement(Input, {
           name: "author", 
           label: "Author", 
-          value: this.props.author}), 
+          value: this.props.course.author.name, 
+          onChange: this.props.onChange}), 
         React.createElement(Input, {
           name: "category", 
           label: "Category", 
-          value: this.props.category}), 
+          value: this.props.course.category, 
+          onChange: this.props.onChange}), 
         React.createElement(Input, {
           name: "length", 
           label: "Length", 
-          value: this.props.length}), 
+          value: this.props.course.length, 
+          onChange: this.props.onChange}), 
+        React.createElement(Input, {
+          name: "watchHref", 
+          label: "Link", 
+          value: this.props.course.watchHref, 
+          onChange: this.props.onChange}), 
         React.createElement("input", {type: "submit", value: "Save", className: "btn btn-default", 
           onClick: this.props.onSave})
       )
@@ -51007,9 +51029,16 @@ module.exports = CoursesPage;
 "use strict";
 
 var React = require("react");
+var Router = require("react-router");
 var CourseForm = require("./coursesForm");
+var CourseStore = require("../../stores/courseStore");
+var CourseAction = require("../../actions/coursesActions");
+var toastr = require("toastr");
 
 var ManageCoursePage = React.createClass({displayName: "ManageCoursePage",
+  mixins: [
+    Router.Navigation
+  ],
   getInitialState: function(){
     return {
       course: {
@@ -51017,23 +51046,50 @@ var ManageCoursePage = React.createClass({displayName: "ManageCoursePage",
         length: "",
         category: "",
         title: "",
-        author: ""
+        author: {id: "", name: ""}
       }
     };
+  },
+  componentWillMount: function(){
+    var courseId = this.props.params.id;
+    if (courseId){
+      this.setState({course: CourseStore.getCourseById(courseId)});
+    }
   },
   render: function(){
     return (
       React.createElement("div", null, 
         React.createElement(CourseForm, {
-          course: this.state.course})
+          course: this.state.course, 
+          onSave: this._saveCourse, 
+          onChange: this._setCourseState})
       )
     );
+  },
+  _setCourseState: function(event) {
+    var field = event.target.name;
+    var value = event.target.value;
+    switch(field){
+      case "author":
+        this.state.course.author.name = value;
+        break;
+      default:
+        this.state.course[field] = value;
+    }
+    return this.setState({course: this.state.course});
+  },
+  _saveCourse: function(event){
+    event.preventDefault();
+    //update function
+    CourseAction.updateCourse(this.state.course);
+    toastr.success("Course Saved!");
+    this.transitionTo("courses");
   }
 });
 
 module.exports = ManageCoursePage;
 
-},{"./coursesForm":220,"react":202}],224:[function(require,module,exports){
+},{"../../actions/coursesActions":205,"../../stores/courseStore":230,"./coursesForm":220,"react":202,"react-router":33,"toastr":203}],224:[function(require,module,exports){
 "use strict";
 
 var React = require("react");
@@ -51064,6 +51120,8 @@ module.exports = keyMirror({
   UPDATE_AUTHOR: null,
   DELETE_AUTHOR: null,
   INITIALIZE_COURSES: null,
+  CREATE_COURSES: null,
+  UPDATE_COURSES: null,
   DELETE_COURSES: null
 });
 
@@ -51208,6 +51266,16 @@ Dispatcher.register(function(action) {
   switch(action.actionType) {
     case ActionTypes.INITIALIZE_COURSES:
       _courses = action.initialData.courses;
+      CourseStore.emitChange();
+      break;
+    case ActionTypes.CREATE_COURSES:
+      _courses.push(action.course);
+      CourseStore.emitChange();
+    break;
+    case ActionTypes.UPDATE_COURSES:
+      var existingCourse = _.find(_courses, {id: action.course.id});
+      var existingCourseIndex = _.indexOf(_courses, existingCourse);
+      _courses.splice(existingCourseIndex, 1, action.course);
       CourseStore.emitChange();
       break;
     case ActionTypes.DELETE_COURSES:

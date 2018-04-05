@@ -12,8 +12,21 @@ var CoursesAction = {
       actionType: ActionTypes.DELETE_COURSES,
       id: id
     });
+  },
+  createCourse: function(course){
+    var newCourse = CoursesApi.saveCourse(course);
+    Dispatcher.dispatch({
+      actionType: ActionTypes.CREATE_COURSES,
+      course: newCourse
+    });
+  },
+  updateCourse: function(course){
+    var updatedCourse = CoursesApi.saveCourse(course);
+    Dispatcher.dispatch({
+      actionType: ActionTypes.UPDATE_COURSES,
+      course: updatedCourse
+    });
   }
-
 };
 
 module.exports = CoursesAction;
