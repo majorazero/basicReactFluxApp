@@ -50306,7 +50306,6 @@ var ActionTypes = require("../constants/actionTypes");
 
 var CoursesAction = {
   deleteCourse: function(id){
-    console.log(id);
     CoursesApi.deleteCourse();
     Dispatcher.dispatch({
       actionType: ActionTypes.DELETE_COURSES,
@@ -51304,7 +51303,6 @@ Dispatcher.register(function(action) {
       break;
     case ActionTypes.CREATE_COURSES:
       _courses.push(action.course);
-      console.log(_courses);
       CourseStore.emitChange();
     break;
     case ActionTypes.UPDATE_COURSES:
