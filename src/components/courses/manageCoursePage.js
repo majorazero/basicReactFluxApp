@@ -19,7 +19,8 @@ var ManageCoursePage = React.createClass({
         category: "",
         title: "",
         author: {id: "", name: ""}
-      }
+      },
+      errors: {}
     };
   },
   componentWillMount: function(){
@@ -34,9 +35,33 @@ var ManageCoursePage = React.createClass({
         <CourseForm
           course={this.state.course}
           onSave={this._saveCourse}
-          onChange={this._setCourseState}/>
+          onChange={this._setCourseState}
+          errors={this.state.errors}/>
       </div>
     );
+  },
+  _courseFormValidation: function(){
+    var validForm = true;
+    this.state.errors = {};
+    var course = this.state.course;
+    if(course.title.length < 2){
+      this.state.errors.title = "Title must be at least 2 characters long.";
+      validForm = false;
+    }
+    if(course.author.name.length < 2){
+      this.state.errors.name = "Author name must be at least 2 characters long.";
+      validForm = false;
+    }
+    if(course.category.length < 2){
+      this.state.errors.category = "Category name must be at least 2 characters long.";
+      validForm = false;
+    }
+    if(course.watchHref.length < 2){
+      this.state.errors.watchHref = "Link must be at least 2 characters long.";
+      validForm = false;
+    }
+    this.setState({errors: this.state.errors});
+    return validForm;
   },
   _setCourseState: function(event) {
     var field = event.target.name;
@@ -52,7 +77,9 @@ var ManageCoursePage = React.createClass({
   },
   _saveCourse: function(event){
     event.preventDefault();
-    //update function
+    if(!this._courseFormValidation()){
+      return;
+    }
     if(this.state.course.id){
       CourseAction.updateCourse(this.state.course);
     } else {
