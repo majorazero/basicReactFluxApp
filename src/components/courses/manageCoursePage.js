@@ -53,7 +53,11 @@ var ManageCoursePage = React.createClass({
   _saveCourse: function(event){
     event.preventDefault();
     //update function
-    CourseAction.updateCourse(this.state.course);
+    if(this.state.course.id){
+      CourseAction.updateCourse(this.state.course);
+    } else {
+      CourseAction.createCourse(this.state.course);
+    }
     toastr.success("Course Saved!");
     this.transitionTo("courses");
   }

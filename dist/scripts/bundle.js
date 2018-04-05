@@ -50731,7 +50731,7 @@ var ManageAuthorPage = React.createClass({displayName: "ManageAuthorPage",
     if (this.state.author.id) { //if there is an id this becomes an update
       AuthorActions.updateAuthor(this.state.author);
     } else {
-    AuthorActions.createAuthor(this.state.author);
+      AuthorActions.createAuthor(this.state.author);
     }
     toastr.success("Author saved!");
     this.setState({dirty: false});
@@ -51081,7 +51081,11 @@ var ManageCoursePage = React.createClass({displayName: "ManageCoursePage",
   _saveCourse: function(event){
     event.preventDefault();
     //update function
-    CourseAction.updateCourse(this.state.course);
+    if(this.state.course.id){
+      CourseAction.updateCourse(this.state.course);
+    } else {
+      CourseAction.createCourse(this.state.course);
+    }
     toastr.success("Course Saved!");
     this.transitionTo("courses");
   }
@@ -51270,6 +51274,7 @@ Dispatcher.register(function(action) {
       break;
     case ActionTypes.CREATE_COURSES:
       _courses.push(action.course);
+      console.log(_courses);
       CourseStore.emitChange();
     break;
     case ActionTypes.UPDATE_COURSES:
