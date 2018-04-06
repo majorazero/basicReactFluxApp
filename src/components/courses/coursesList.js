@@ -7,6 +7,11 @@ var CourseActions = require("../../actions/coursesActions");
 var toastr = require("toastr");
 
 var CoursesList = React.createClass({
+  /**
+  * deletes courses and passes to the courseAction
+  * @param {string} id the id of the course that is going to be deleted.
+  * @param {SyntheticEvent} event needed to prevent the page from reloading
+  */
   _deleteCourse: function(id, event){
     event.preventDefault();
     CourseActions.deleteCourse(id);

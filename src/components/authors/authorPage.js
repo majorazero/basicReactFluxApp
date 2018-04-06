@@ -19,6 +19,9 @@ var AuthorPage = React.createClass({
   componentWillUnmount: function() {
     AuthorStore.removeChangeListener(this._onChange);
   },
+  /**
+  * Written so React will update changes like when authors are deleted.
+  */
   _onChange: function(){
     this.setState({ authors: AuthorStore.getAllAuthors() });
   },

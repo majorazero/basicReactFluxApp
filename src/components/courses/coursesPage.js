@@ -18,6 +18,9 @@ var CoursesPage = React.createClass({
   componentWillUnmount: function() {
     CourseStore.removeChangeListener(this._onChange);
   },
+  /**
+  * Written so React will update changes like when coureses are deleted.
+  */
   _onChange: function(){
     this.setState({ courses: CourseStore.getAllCourses() });
   },

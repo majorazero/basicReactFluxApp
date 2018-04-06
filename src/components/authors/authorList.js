@@ -10,6 +10,11 @@ var AuthorList = React.createClass({
   propTypes: {
     authors: React.PropTypes.array.isRequired //for development,helpful error messages
   },
+  /**
+  * deletes authors and passes to the authorAction
+  * @param {string} id the id of the author that is going to be deleted.
+  * @param {SyntheticEvent} event needed to prevent the page from reloading
+  */
   _deleteAuthor: function(id, event){
     event.preventDefault();
     AuthorActions.deleteAuthor(id);
